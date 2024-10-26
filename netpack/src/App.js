@@ -14,6 +14,7 @@ import NetworkDashboard from "./components/dashboard";
 import Sidebar from "./components/sidebar";
 import Button from "./components/ui/buttonComponent";
 import Analyze from "./components/analyse";
+import Hero from "./components/home";
 import {
   Card,
   CardHeader,
@@ -410,7 +411,7 @@ function App() {
               </Layout>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Hero />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
