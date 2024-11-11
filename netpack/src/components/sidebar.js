@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Activity, Target  } from "lucide-react";
+import { Shield, Activity, Target, SwatchBookIcon  } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Sidebar = () => {
@@ -20,6 +20,13 @@ const Sidebar = () => {
           >
             <Target className="h-5 w-5 text-gray-600" />
             <span>Analyse</span>
+          </Link>
+          <Link
+            to="/pumpfun"
+            className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
+          >
+            <SwatchBookIcon className="h-5 w-5 text-gray-600" />
+            <span>PumpFun</span>
           </Link>
           <Link
             to="#"

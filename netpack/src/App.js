@@ -8,13 +8,14 @@ import {
   useNavigate,
   Link,
 } from "react-router-dom";
-import { Shield, LogOut, Menu, X } from "lucide-react";
+import { Shield, Menu, X } from "lucide-react";
 
 import NetworkDashboard from "./components/dashboard";
 import Sidebar from "./components/sidebar";
 import Button from "./components/ui/buttonComponent";
 import Analyze from "./components/analyse";
 import Hero from "./components/home";
+import Pump from "./components/pump";
 import {
   Card,
   CardHeader,
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post("http://localhost:3001/login", {
+      const response = await axios.post("http://localhost:3003/login", {
         email,
         password,
       });
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (email, password, name) => {
     try {
-      const response = await axios.post("http://localhost:3001/signup", {
+      const response = await axios.post("http://localhost:3003/signup", {
         email,
         password,
         name,
@@ -411,6 +412,7 @@ function App() {
               </Layout>
             }
           />
+          <Route path="/pumpfun" element={ <Layout><Pump /></Layout>} />
           <Route path="/" element={<Hero />} />
         </Routes>
       </BrowserRouter>
