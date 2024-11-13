@@ -19,7 +19,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Alert, AlertDescription } from "./ui/alertComponent";
 
-const CryptoDashboard = () => {
+const PumpFun = () => {
   const [tokens, setTokens] = useState({});
   const [selectedToken, setSelectedToken] = useState(null);
   const [priceHistory, setPriceHistory] = useState([]);
@@ -28,7 +28,7 @@ const CryptoDashboard = () => {
   const [lastMessage, setLastMessage] = useState(null);
   const [tokenMetadata, setTokenMetadata] = useState({});
 
-  // Fetch metadata from IPFS
+  // metadata from IPFS
   const fetchMetadata = useCallback(async (uri) => {
     try {
       const response = await fetch(uri);
@@ -109,13 +109,13 @@ const CryptoDashboard = () => {
     return () => ws.close();
   }, []);
 
-  // Handle incoming WebSocket messages
+  // incoming WebSocket messages
   const handleMessage = useCallback(
     async (message) => {
       if (message.txType === "create") {
         console.log("New token detected:", message.symbol);
 
-        // Fetch metadata if URI is provided
+        // metadata if URI is provided
         let metadata = null;
         if (message.uri) {
           metadata = await fetchMetadata(message.uri);
@@ -193,7 +193,6 @@ const CryptoDashboard = () => {
     [selectedToken, fetchMetadata]
   );
 
-  // Debug section component
   const DebugSection = () => (
     <Card className="mt-4">
       <CardHeader>
@@ -416,4 +415,4 @@ const CryptoDashboard = () => {
   );
 };
 
-export default CryptoDashboard;
+export default PumpFun;

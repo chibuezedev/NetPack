@@ -15,6 +15,7 @@ import Sidebar from "./components/sidebar";
 import Button from "./components/ui/buttonComponent";
 import Analyze from "./components/analyse";
 import Hero from "./components/home";
+// import TokenLaunch from "./components/pages/home";
 import Pump from "./components/pump";
 import {
   Card,
