@@ -16,7 +16,6 @@ class EnhancedSecurityAnalyzer:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.bert_model.to(self.device)
         
-        # Initialize ensemble models
         self.models = {
             'bert': self.bert_model,
             'code_bert': AutoModelForSequenceClassification.from_pretrained('microsoft/codebert-base'),
@@ -29,7 +28,7 @@ class EnhancedSecurityAnalyzer:
             'polygon': Web3(Web3.HTTPProvider('https://polygon-rpc.com'))
         }
         
-        # Known vulnerability patterns
+        # vulnerability patterns
         self.vulnerability_patterns = {
             'reentrancy': r'(\.\bcall\b.*?{.*?[\w\.]+\.transfer\()',
             'overflow': r'(\+|\-|\*|\/(?!/))(?![^{]*})(?![^\[]*\])',
@@ -46,7 +45,7 @@ class EnhancedSecurityAnalyzer:
         """Comprehensive contract analysis"""
         contract_code = await self._get_contract_code(contract_address, chain)
         
-        # Parallel analysis
+        # parallel analysis
         results = await asyncio.gather(
             self._analyze_code_security(contract_code),
             self._check_attack_surface(contract_address, chain),
@@ -61,7 +60,7 @@ class EnhancedSecurityAnalyzer:
         """Enhanced code security analysis"""
         vulnerabilities = []
         
-        # Ensemble model prediction
+        # BERT ensemble model prediction
         for name, model in self.models.items():
             inputs = self.tokenizer(code, 
                                   return_tensors="pt",
@@ -199,7 +198,7 @@ class EnhancedSecurityAnalyzer:
 
 
     async def _fetch_security_threats(self, session: httpx.AsyncClient) -> List:
-        # Etherscan for contract verification and alerts
+        # etherscan for contract verification and alerts
         etherscan_params = {
             'module': 'contract',
             'action': 'getabi',

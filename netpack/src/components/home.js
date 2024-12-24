@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React from "react";
-import { Shield, Eye, Network, Bot, GitBranch } from "lucide-react";
+import { Shield, Eye, Network, Bot, GitBranch} from "lucide-react";
 import { Card } from "./ui/card";
 
 const Navbar = () => {
@@ -11,7 +11,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-3">
             <Shield className="w-8 h-8 text-indigo-600" />
             <span className="font-bold text-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-transparent bg-clip-text">
-              ChainGuard
+              Tide
             </span>
           </div>
           <div className="flex items-center space-x-6">
@@ -24,9 +24,11 @@ const Navbar = () => {
             <a href="#pricing" className="text-gray-600 hover:text-gray-900">
               Pricing
             </a>
+            <a href="/signup" className="text-gray-600 hover:text-gray-900">
             <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
               Get Started
-            </button>
+              </button>
+              </a>
           </div>
         </div>
       </div>
@@ -120,7 +122,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <Shield className="w-6 h-6 text-indigo-400" />
-              <span className="font-bold text-lg">ChainGuard</span>
+              <span className="font-bold text-lg">Tide</span>
             </div>
             <p className="text-gray-400">
               Securing the future of Web3 with advanced AI-powered protection

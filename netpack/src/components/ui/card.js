@@ -32,6 +32,10 @@ export const CardFooter = ({ children, className }) => {
   );
 };
 
+export const CardDescription = ({ children, className = "" }) => (
+  <p className={`text-sm text-gray-500 ${className}`}>{children}</p>
+);
+
 CardFooter.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
