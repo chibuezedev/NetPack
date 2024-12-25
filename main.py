@@ -1,9 +1,16 @@
+
+import sys
+from pathlib import Path
+
+project_dir = Path(__file__).parent
+sys.path.append(str(project_dir))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from model import EnhancedSecurityAnalyzer
 
-app = FastAPI()
+app = FastAPI(title="Smart Contract Security Analyzer")
 analyzer = EnhancedSecurityAnalyzer()
 
 app.add_middleware(
