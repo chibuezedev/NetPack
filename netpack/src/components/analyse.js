@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Alert, AlertDescription } from "./ui/alertComponent";
@@ -22,15 +21,16 @@ const SecurityAnalyzer = () => {
 
   // API endpoints
   const API_ENDPOINTS = {
-    analyze: "/api/security/analyze",
-    realtime: "/api/security/realtime",
-    community: "/api/security/community",
-    threatFeed: "/api/security/threats",
+    analyze: "http://localhost:8000/api/security/analyze",
+    realtime: "http://localhost:8000/api/security/realtime",
+    community: "http://localhost:8000/api/security/community",
+    threatFeed: "http://localhost:8000/api/security/threats",
   };
 
   // Fetch real-time analysis
   const fetchAnalysis = async () => {
     try {
+      console.log("Data", { contract, chain });
       setLoading(true);
       const response = await fetch(`${API_ENDPOINTS.analyze}`, {
         method: "POST",
@@ -38,9 +38,10 @@ const SecurityAnalyzer = () => {
         body: JSON.stringify({ contract, chain }),
       });
       const data = await response.json();
-      setAnalysis(data);
+      setAnalysis(data || { attackSurface: [], threats: [] }); // Provide default empty arrays
     } catch (error) {
       console.error("Analysis failed:", error);
+      setAnalysis({ attackSurface: [], threats: [] }); // Set default state on error
     } finally {
       setLoading(false);
     }
@@ -50,17 +51,34 @@ const SecurityAnalyzer = () => {
   useEffect(() => {
     if (!contract) return;
 
-    const ws = new WebSocket("wss://your-websocket-endpoint");
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      setRealtimeData((prev) => [...prev, data].slice(-20));
+    const ws = new WebSocket("ws://localhost:8000/ws");
+
+    ws.onopen = () => {
+      console.log("WebSocket Connected");
     };
 
-    return () => ws.close();
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        setRealtimeData((prev) => [...prev, data].slice(-20));
+      } catch (error) {
+        console.error("WebSocket message error:", error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
   }, [contract]);
 
   const renderAttackSurfaceMap = () => {
-    if (!analysis?.attackSurface) return null;
+    if (!analysis?.attackSurface?.length) return null;
 
     return (
       <Card className="mt-4">
@@ -93,25 +111,29 @@ const SecurityAnalyzer = () => {
     );
   };
 
-  const renderRealtimeMonitoring = () => (
-    <Card className="mt-4">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="w-6 h-6" />
-          Real-time Activity Monitoring
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <LineChart width={600} height={200} data={realtimeData}>
-          <XAxis dataKey="timestamp" />
-          <YAxis />
-          <CartesianGrid strokeDasharray="3 3" />
-          <Tooltip />
-          <Line type="monotone" dataKey="anomalyScore" stroke="#8884d8" />
-        </LineChart>
-      </CardContent>
-    </Card>
-  );
+  const renderRealtimeMonitoring = () => {
+    if (!realtimeData.length) return null;
+
+    return (
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-6 h-6" />
+            Real-time Activity Monitoring
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <LineChart width={600} height={200} data={realtimeData}>
+            <XAxis dataKey="timestamp" />
+            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" />
+            <Tooltip />
+            <Line type="monotone" dataKey="anomalyScore" stroke="#8884d8" />
+          </LineChart>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-4">
@@ -165,7 +187,7 @@ const SecurityAnalyzer = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {analysis.threats.map((threat, index) => (
+                      {analysis.threats?.map((threat, index) => (
                         <Alert key={index} className="bg-red-50">
                           <AlertTriangle className="w-4 h-4" />
                           <AlertDescription>

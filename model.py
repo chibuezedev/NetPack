@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 import numpy as np
 from web3 import Web3
 import httpx
@@ -6,6 +6,10 @@ import asyncio
 from datetime import datetime
 import re
 from config import CONFIG
+
+class ContractValidationError(Exception):
+    """Custom exception for contract validation errors"""
+    pass
 
 class EnhancedSecurityAnalyzer:
     def __init__(self):
@@ -56,39 +60,128 @@ class EnhancedSecurityAnalyzer:
                 print(f"Warning: Could not connect to {network}")
 
     async def analyze_contract(self, contract_address: str, chain: str) -> Dict:
-        """Comprehensive contract analysis with fallback mechanisms"""
+        """Comprehensive contract analysis with enhanced error handling"""
         try:
-            contract_code = await self._get_contract_code(contract_address, chain)
-            if not contract_code:
-                return {'error': 'Could not retrieve contract code'}
+            # Validate inputs first
+            if not self._validate_inputs(contract_address, chain):
+                return self._format_error_response("Invalid contract address or chain")
             
-            # Execute analyses with timeouts
+            # Check web3 connection first
+            if not self._check_web3_connection(chain):
+                return self._format_error_response(
+                    f"No connection available for chain {chain}. Please check your network configuration."
+                )
+            
+            # Get contract code with retries and detailed error handling
+            contract_code = await self._get_contract_code_with_validation(contract_address, chain)
+            
+            if not contract_code:
+                return self._format_error_response(
+                    "Could not retrieve contract code. Contract may not exist or network may be unavailable.",
+                    details={
+                        "chain": chain,
+                        "contract_address": contract_address,
+                        "connection_status": self._get_connection_status(chain)
+                    }
+                )
+            
+            # Continue with existing analysis logic...
             results = await asyncio.gather(
                 self._analyze_code_security(contract_code),
                 self._check_attack_surface(contract_address, chain),
                 self._monitor_cross_chain_activity(contract_address),
                 self._get_threat_intelligence(),
                 self._analyze_behavioral_patterns(contract_address, chain),
-                return_exceptions=True  # Handle individual task failures
+                return_exceptions=True
             )
             
-            # Filter out failed tasks
-            valid_results = []
-            for idx, result in enumerate(results):
-                if isinstance(result, Exception):
-                    print(f"Warning: Analysis task {idx} failed: {str(result)}")
-                    valid_results.append({})
-                else:
-                    valid_results.append(result)
-                    
-            return self._compile_analysis_results(valid_results)
+            return self._compile_analysis_results(results)
             
+        except ContractValidationError as e:
+            return self._format_error_response(str(e))
         except Exception as e:
-            return {
-                'error': f'Analysis failed: {str(e)}',
-                'timestamp': datetime.now().isoformat()
-            }
+            return self._format_error_response(
+                "Unexpected error during analysis",
+                details={"error_type": type(e).__name__, "error_message": str(e)}
+            )
 
+    async def _get_contract_code_with_validation(
+        self, contract_address: str, chain: str
+    ) -> Optional[str]:
+        """Get contract code with enhanced validation and retries"""
+        if chain not in self.web3_connections:
+            raise ContractValidationError(f"Chain {chain} not supported")
+            
+        web3 = self.web3_connections[chain]
+        retry_count = 3
+        retry_delay = 1  # seconds
+        
+        for attempt in range(retry_count):
+            try:
+                # Validate address format
+                if not Web3.is_address(contract_address):
+                    raise ContractValidationError("Invalid contract address format")
+                
+                checksum_address = Web3.to_checksum_address(contract_address)
+                code = await self._safe_get_code(web3, checksum_address)
+                
+                # Check if contract exists (code length > 2 to account for "0x")
+                if not code or len(code) <= 2:
+                    return None
+                    
+                return code
+                
+            except ContractValidationError:
+                raise
+            except Exception as e:
+                if attempt == retry_count - 1:
+                    print(f"Failed to retrieve contract code after {retry_count} attempts: {e}")
+                    return None
+                await asyncio.sleep(retry_delay * (attempt + 1))
+
+    async def _safe_get_code(self, web3: Web3, address: str) -> Optional[str]:
+        """Safely retrieve contract code with timeout"""
+        try:
+            return web3.eth.get_code(address).hex()
+        except Exception as e:
+            print(f"Error retrieving code: {e}")
+            return None
+
+    def _validate_inputs(self, contract_address: str, chain: str) -> bool:
+        """Validate input parameters"""
+        if not contract_address or not chain:
+            return False
+        if not isinstance(contract_address, str) or not isinstance(chain, str):
+            return False
+        if not Web3.is_address(contract_address):
+            return False
+        return True
+
+    def _format_error_response(self, message: str, details: Dict = None) -> Dict:
+        """Format standardized error response"""
+        response = {
+            'error': message,
+            'timestamp': datetime.now().isoformat(),
+            'success': False
+        }
+        if details:
+            response['details'] = details
+        return response
+
+    def _check_web3_connection(self, chain: str) -> bool:
+        """Verify web3 connection status"""
+        if chain not in self.web3_connections:
+            return False
+        return self.web3_connections[chain].is_connected()
+
+    def _get_connection_status(self, chain: str) -> Dict:
+        """Get detailed connection status"""
+        return {
+            'connected': chain in self.web3_connections,
+            'chain': chain,
+            'provider_url': str(self.web3_connections.get(chain, {}).provider.endpoint_uri)
+            if chain in self.web3_connections else None
+        }
     async def _analyze_code_security(self, code: str) -> Dict:
         """Pattern-based code security analysis"""
         vulnerabilities = []
